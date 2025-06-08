@@ -1,0 +1,475 @@
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Nash Equilibrium Explorer - GameTheory Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&amp;family=Montserrat:wght@500;700&amp;display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5',
+            secondary: '#10B981',
+            accent: '#F59E0B',
+            dark: '#1F2937',
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+            montserrat: ['Montserrat', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .modal-bg { background: rgba(30, 41, 59, 0.7); }
+    .cell-nash { background: #f59e0b22; border: 2px solid #f59e0b; }
+    .cell-user { background: #6366f122; }
+    .cell-ai { background: #10b98122; }
+    .payoff-cell { transition: background 0.2s; }
+    .payoff-cell.selected { background: #6366f1; color: #fff; }
+    .payoff-cell.nash { background: #f59e0b; color: #fff; }
+    .payoff-cell.user { background: #4F46E5; color: #fff; }
+    .payoff-cell.ai { background: #10B981; color: #fff; }
+    .payoff-cell:hover { background: #818cf822; }
+    .payoff-cell:active { transform: scale(0.97); }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a class="flex items-center" href="index.html">
+            <img alt="Game Theory Playground logo, modern, with stylized game theory diagram" class="h-10 w-10 rounded-full" src="https://replicate.delivery/xezq/dyEdCw9SMj6NH1SKXGytY4Xk2H02qkdhhVkq9Ummyz514LNF/out-0.png"/>
+            <span class="ml-3 text-2xl font-bold text-primary font-montserrat tracking-tight">
+              GameTheory Playground
+            </span>
+          </a>
+        </div>
+        <div class="flex items-center">
+          <a class="text-primary font-semibold hover:underline px-4" href="index.html">
+            Home
+          </a>
+          <a class="text-gray-600 hover:text-primary px-4" href="#">
+            About
+          </a>
+          <a class="text-gray-600 hover:text-primary px-4" href="#">
+            Contact
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center justify-center px-2 py-8 sm:py-12">
+    <div class="max-w-3xl w-full mx-auto">
+      <!-- Title -->
+      <div class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary font-montserrat mb-2">
+          Nash Equilibrium Explorer
+        </h1>
+        <p class="text-gray-600 text-lg">
+          Build your own 2-player game, experiment with strategies, and discover Nash equilibria!
+        </p>
+        <button id="openRules" class="mt-4 inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition text-base">
+          <i class="fas fa-info-circle mr-2"></i> Rules &amp; Instructions
+        </button>
+      </div>
+      <!-- Scenario Card -->
+      <div class="rounded-xl shadow-lg p-6 mb-6 flex flex-col sm:flex-row items-center bg-gradient-to-r from-primary to-indigo-700 text-white">
+        <img alt="Colorful grid with arrows and highlighted cells, representing a Nash equilibrium payoff matrix for two players" class="w-24 h-24 rounded-lg object-cover mb-4 sm:mb-0 sm:mr-6 border-4 border-white" src="https://replicate.delivery/xezq/IgvUzA8enw1uUC1lxNet8xcwGHD4Cs98YOQepOv9fSe6a8lmC/out-0.png"/>
+        <div>
+          <h2 class="text-xl font-bold mb-1">
+            Interactive Payoff Matrix
+          </h2>
+          <p class="text-base">
+            Set the payoffs for each player, try different strategies, and see which outcomes are Nash equilibria.
+          </p>
+        </div>
+      </div>
+      <!-- Matrix Builder -->
+      <div class="bg-white rounded-xl shadow p-6 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div class="mb-2 sm:mb-0">
+            <span class="text-gray-700 font-semibold">Rows (You):</span>
+            <select id="rowCount" class="rounded-md border-gray-300 px-2 py-1 text-primary font-bold focus:ring-primary focus:border-primary">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+            <span class="ml-4 text-gray-700 font-semibold">Columns (AI):</span>
+            <select id="colCount" class="rounded-md border-gray-300 px-2 py-1 text-primary font-bold focus:ring-primary focus:border-primary">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <button id="randomizeMatrix" class="px-4 py-2 bg-secondary text-white rounded-lg font-semibold hover:bg-secondary/90 transition text-base">
+            <i class="fas fa-random mr-2"></i> Randomize Payoffs
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table id="payoffMatrix" class="min-w-full border border-gray-200 rounded-lg text-center">
+            <!-- Matrix will be rendered here -->
+          </table>
+        </div>
+        <div class="mt-4 flex flex-col sm:flex-row gap-2">
+          <button id="findNash" class="w-full sm:w-auto px-6 py-2 bg-accent text-white rounded-lg font-semibold hover:bg-accent/90 transition">
+            <i class="fas fa-search mr-2"></i> Find Nash Equilibria
+          </button>
+          <button id="resetMatrix" class="w-full sm:w-auto px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition">
+            <i class="fas fa-undo mr-2"></i> Reset
+          </button>
+        </div>
+      </div>
+      <!-- Nash Equilibrium Results -->
+      <div class="bg-white rounded-xl shadow p-6 mb-6" id="nashResults" style="display:none;">
+        <h3 class="text-lg font-bold text-primary mb-2">Nash Equilibria Found:</h3>
+        <ul class="list-disc pl-6 text-gray-700 text-base" id="nashList"></ul>
+      </div>
+      <!-- Example Games -->
+      <div class="bg-white rounded-xl shadow p-6 mb-6">
+        <h3 class="text-lg font-bold text-primary mb-2">Try Example Games:</h3>
+        <div class="flex flex-wrap gap-2">
+          <button class="example-btn px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition text-sm" data-example="prisoner">
+            Prisoner's Dilemma
+          </button>
+          <button class="example-btn px-4 py-2 bg-secondary text-white rounded-lg font-semibold hover:bg-secondary/90 transition text-sm" data-example="stag">
+            Stag Hunt
+          </button>
+          <button class="example-btn px-4 py-2 bg-accent text-white rounded-lg font-semibold hover:bg-accent/90 transition text-sm" data-example="battle">
+            Battle of the Sexes
+          </button>
+          <button class="example-btn px-4 py-2 bg-indigo-400 text-white rounded-lg font-semibold hover:bg-indigo-500 transition text-sm" data-example="matching">
+            Matching Pennies
+          </button>
+        </div>
+      </div>
+      <!-- Rules Modal -->
+      <div class="fixed inset-0 modal-bg flex items-center justify-center z-50 hidden" id="rulesModal">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-left relative">
+          <button id="closeRules" class="absolute top-3 right-3 text-gray-400 hover:text-primary text-2xl">
+            <i class="fas fa-times"></i>
+          </button>
+          <h2 class="text-2xl font-bold text-primary mb-2">
+            How to Use: Nash Equilibrium Explorer
+          </h2>
+          <ul class="list-disc pl-6 text-gray-700 mb-4 text-base">
+            <li>
+              Set the number of strategies for each player (rows for you, columns for AI).
+            </li>
+            <li>
+              Click on each cell to edit the payoffs (first number is your payoff, second is AI's).
+            </li>
+            <li>
+              Click <span class="font-semibold text-accent">Find Nash Equilibria</span> to highlight all Nash equilibria in the matrix.
+            </li>
+            <li>
+              Try the example games to see classic game theory scenarios.
+            </li>
+            <li>
+              A <span class="font-semibold text-accent">Nash equilibrium</span> is a set of strategies where no player can improve their payoff by changing their own strategy alone.
+            </li>
+          </ul>
+          <div class="mb-2">
+            <span class="font-semibold text-primary">Tips:</span>
+            <ul class="list-disc pl-6 text-gray-600 text-sm">
+              <li>Click a cell to edit payoffs. Use <b>Tab</b> or <b>Enter</b> to move quickly.</li>
+              <li>Try to find games with multiple or unique Nash equilibria.</li>
+              <li>Use randomize for creative, unexpected games!</li>
+            </ul>
+          </div>
+          <div class="mt-4 text-center">
+            <button id="closeRulesBtn" class="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition">
+              Got it!
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <!-- Footer -->
+  <footer class="bg-gray-800">
+    <div class="max-w-7xl mx-auto py-6 px-4 flex flex-col md:flex-row items-center justify-between">
+      <div class="flex items-center mb-4 md:mb-0">
+        <img alt="Game Theory Playground logo, small" class="h-8 w-8 rounded-full" src="https://replicate.delivery/xezq/vNQ7rYVyOlZtCZvJTOCDiLNNeRnEeJMiv3hvTGX7LHQYjv0UA/out-0.png"/>
+        <span class="ml-2 text-lg text-white font-bold font-montserrat">
+          GameTheory Playground
+        </span>
+      </div>
+      <p class="mt-2 md:mt-0 text-gray-400 text-sm">
+        © 2024 GameTheory Playground. All rights reserved.
+      </p>
+    </div>
+  </footer>
+  <script>
+    // --- Matrix State ---
+    let rowCount = 2, colCount = 2;
+    let matrix = [
+      [ [2,2], [0,3] ],
+      [ [3,0], [1,1] ]
+    ];
+
+    // --- DOM Elements ---
+    const payoffMatrix = document.getElementById('payoffMatrix');
+    const rowCountSel = document.getElementById('rowCount');
+    const colCountSel = document.getElementById('colCount');
+    const randomizeMatrix = document.getElementById('randomizeMatrix');
+    const findNash = document.getElementById('findNash');
+    const resetMatrix = document.getElementById('resetMatrix');
+    const nashResults = document.getElementById('nashResults');
+    const nashList = document.getElementById('nashList');
+    const openRules = document.getElementById('openRules');
+    const rulesModal = document.getElementById('rulesModal');
+    const closeRules = document.getElementById('closeRules');
+    const closeRulesBtn = document.getElementById('closeRulesBtn');
+    const exampleBtns = document.querySelectorAll('.example-btn');
+
+    // --- Utility ---
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
+    function randomPayoff() {
+      return [randomInt(-2, 8), randomInt(-2, 8)];
+    }
+    function randomInt(a, b) {
+      return Math.floor(Math.random() * (b - a + 1)) + a;
+    }
+
+    // --- Matrix Rendering ---
+    function renderMatrix(highlightNash = []) {
+      let html = '<thead><tr><th class="bg-gray-100"></th>';
+      for (let j = 0; j < colCount; j++) {
+        html += `<th class="bg-gray-100 text-primary font-bold px-2 py-1">AI ${String.fromCharCode(65+j)}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+      for (let i = 0; i < rowCount; i++) {
+        html += `<tr><th class="bg-gray-100 text-secondary font-bold px-2 py-1">You ${String.fromCharCode(65+i)}</th>`;
+        for (let j = 0; j < colCount; j++) {
+          let cellClass = "payoff-cell";
+          if (highlightNash.some(([x,y])=>x===i&&y===j)) cellClass += " nash";
+          html += `<td tabindex="0" class="${cellClass}" data-i="${i}" data-j="${j}"><span>${matrix[i][j][0]}, ${matrix[i][j][1]}</span></td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</tbody>';
+      payoffMatrix.innerHTML = html;
+      // Add click-to-edit
+      document.querySelectorAll('.payoff-cell').forEach(cell => {
+        cell.addEventListener('click', function(e) {
+          editCell(this);
+        });
+        cell.addEventListener('keydown', function(e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            editCell(this);
+          }
+        });
+      });
+    }
+
+    function editCell(cell) {
+      if (cell.querySelector('input')) return;
+      const i = parseInt(cell.getAttribute('data-i'));
+      const j = parseInt(cell.getAttribute('data-j'));
+      const [a, b] = matrix[i][j];
+      cell.innerHTML = `<input type="number" class="w-12 px-1 py-0.5 border rounded text-center mr-1" id="inputA" value="${a}" style="width:3.5rem"/>
+                        <span class="text-gray-400">,</span>
+                        <input type="number" class="w-12 px-1 py-0.5 border rounded text-center ml-1" id="inputB" value="${b}" style="width:3.5rem"/>`;
+      const inputA = cell.querySelector('#inputA');
+      const inputB = cell.querySelector('#inputB');
+      inputA.focus();
+      inputA.select();
+      inputA.addEventListener('keydown', function(e) {
+        if (e.key === "Enter" || e.key === "Tab") {
+          e.preventDefault();
+          inputB.focus();
+          inputB.select();
+        }
+      });
+      inputB.addEventListener('keydown', function(e) {
+        if (e.key === "Enter" || e.key === "Tab") {
+          e.preventDefault();
+          saveCellEdit(cell, i, j, inputA.value, inputB.value);
+        }
+      });
+      inputA.addEventListener('blur', function() {
+        setTimeout(() => {
+          if (document.activeElement !== inputB) saveCellEdit(cell, i, j, inputA.value, inputB.value);
+        }, 100);
+      });
+      inputB.addEventListener('blur', function() {
+        setTimeout(() => {
+          saveCellEdit(cell, i, j, inputA.value, inputB.value);
+        }, 100);
+      });
+    }
+
+    function saveCellEdit(cell, i, j, a, b) {
+      a = clamp(parseInt(a), -99, 99);
+      b = clamp(parseInt(b), -99, 99);
+      if (isNaN(a)) a = 0;
+      if (isNaN(b)) b = 0;
+      matrix[i][j] = [a, b];
+      cell.innerHTML = `<span>${a}, ${b}</span>`;
+    }
+
+    // --- Nash Equilibrium Finder ---
+    function findNashEquilibria() {
+      let nash = [];
+      // For each cell, check if it's a Nash equilibrium
+      for (let i = 0; i < rowCount; i++) {
+        for (let j = 0; j < colCount; j++) {
+          // Is i the best response to j for player 1?
+          let userBest = true;
+          for (let ii = 0; ii < rowCount; ii++) {
+            if (matrix[ii][j][0] > matrix[i][j][0]) userBest = false;
+          }
+          // Is j the best response to i for player 2?
+          let aiBest = true;
+          for (let jj = 0; jj < colCount; jj++) {
+            if (matrix[i][jj][1] > matrix[i][j][1]) aiBest = false;
+          }
+          if (userBest && aiBest) nash.push([i, j]);
+        }
+      }
+      return nash;
+    }
+
+    function showNashResults(nash) {
+      if (nash.length === 0) {
+        nashResults.style.display = "";
+        nashList.innerHTML = `<li class="text-red-600">No Nash equilibria found for this matrix.</li>`;
+        return;
+      }
+      nashResults.style.display = "";
+      nashList.innerHTML = nash.map(([i, j]) =>
+        `<li>
+          <span class="font-bold text-primary">You ${String.fromCharCode(65+i)}</span> &amp; 
+          <span class="font-bold text-secondary">AI ${String.fromCharCode(65+j)}</span> 
+          &rarr; <span class="text-accent font-semibold">(${matrix[i][j][0]}, ${matrix[i][j][1]})</span>
+        </li>`
+      ).join('');
+    }
+
+    // --- Matrix Controls ---
+    function setMatrixSize(rows, cols) {
+      rowCount = rows;
+      colCount = cols;
+      matrix = [];
+      for (let i = 0; i < rowCount; i++) {
+        matrix[i] = [];
+        for (let j = 0; j < colCount; j++) {
+          matrix[i][j] = randomPayoff();
+        }
+      }
+      nashResults.style.display = "none";
+      renderMatrix();
+    }
+
+    function randomizeMatrixPayoffs() {
+      for (let i = 0; i < rowCount; i++) {
+        for (let j = 0; j < colCount; j++) {
+          matrix[i][j] = randomPayoff();
+        }
+      }
+      nashResults.style.display = "none";
+      renderMatrix();
+    }
+
+    function resetMatrixPayoffs() {
+      for (let i = 0; i < rowCount; i++) {
+        for (let j = 0; j < colCount; j++) {
+          matrix[i][j] = [0, 0];
+        }
+      }
+      nashResults.style.display = "none";
+      renderMatrix();
+    }
+
+    // --- Example Games ---
+    const examples = {
+      prisoner: {
+        rows: 2, cols: 2,
+        data: [
+          [ [2,2], [0,3] ],
+          [ [3,0], [1,1] ]
+        ]
+      },
+      stag: {
+        rows: 2, cols: 2,
+        data: [
+          [ [4,4], [1,3] ],
+          [ [3,1], [2,2] ]
+        ]
+      },
+      battle: {
+        rows: 2, cols: 2,
+        data: [
+          [ [2,1], [0,0] ],
+          [ [0,0], [1,2] ]
+        ]
+      },
+      matching: {
+        rows: 2, cols: 2,
+        data: [
+          [ [1,-1], [-1,1] ],
+          [ [-1,1], [1,-1] ]
+        ]
+      }
+    };
+
+    exampleBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const ex = examples[this.getAttribute('data-example')];
+        rowCountSel.value = ex.rows;
+        colCountSel.value = ex.cols;
+        rowCount = ex.rows;
+        colCount = ex.cols;
+        matrix = JSON.parse(JSON.stringify(ex.data));
+        nashResults.style.display = "none";
+        renderMatrix();
+      });
+    });
+
+    // --- Modal Logic ---
+    function openRulesModal() {
+      rulesModal.classList.remove("hidden");
+    }
+    function closeRulesModal() {
+      rulesModal.classList.add("hidden");
+    }
+
+    // --- Event Listeners ---
+    rowCountSel.addEventListener('change', function() {
+      setMatrixSize(parseInt(this.value), colCount);
+      colCountSel.value = colCount;
+    });
+    colCountSel.addEventListener('change', function() {
+      setMatrixSize(rowCount, parseInt(this.value));
+      rowCountSel.value = rowCount;
+    });
+    randomizeMatrix.addEventListener('click', randomizeMatrixPayoffs);
+    resetMatrix.addEventListener('click', resetMatrixPayoffs);
+    findNash.addEventListener('click', function() {
+      const nash = findNashEquilibria();
+      renderMatrix(nash);
+      showNashResults(nash);
+    });
+    openRules.addEventListener('click', openRulesModal);
+    closeRules.addEventListener('click', closeRulesModal);
+    closeRulesBtn.addEventListener('click', closeRulesModal);
+
+    // --- Initial Render ---
+    setMatrixSize(rowCount, colCount);
+  </script>
+</body>
+</html>
