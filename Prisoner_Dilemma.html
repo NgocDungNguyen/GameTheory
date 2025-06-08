@@ -1,0 +1,567 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Prisoner's Dilemma - GameTheory Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&amp;family=Montserrat:wght@500;700&amp;display=swap" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#4F46E5',
+              secondary: '#10B981',
+              accent: '#F59E0B',
+              dark: '#1F2937',
+            },
+            fontFamily: {
+              poppins: ['Poppins', 'sans-serif'],
+              montserrat: ['Montserrat', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+    <style>
+      body { font-family: 'Poppins', sans-serif; }
+      .decision-btn:active { transform: scale(0.97); }
+      .scenario-card {
+        background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+      }
+      .modal-bg {
+        background: rgba(30, 41, 59, 0.7);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a class="flex items-center" href="index.html">
+              <img alt="Game Theory Playground logo, modern, with stylized game theory diagram" class="h-10 w-10 rounded-full" src="https://replicate.delivery/xezq/dyEdCw9SMj6NH1SKXGytY4Xk2H02qkdhhVkq9Ummyz514LNF/out-0.png"/>
+              <span class="ml-3 text-2xl font-bold text-primary font-montserrat tracking-tight">
+                GameTheory Playground
+              </span>
+            </a>
+          </div>
+          <div class="flex items-center">
+            <a class="text-primary font-semibold hover:underline px-4" href="index.html">
+              Home
+            </a>
+            <a class="text-gray-600 hover:text-primary px-4" href="#">
+              About
+            </a>
+            <a class="text-gray-600 hover:text-primary px-4" href="#">
+              Contact
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <!-- Game Container -->
+    <main class="flex-1 flex flex-col items-center justify-center px-2 py-8 sm:py-12">
+      <div class="max-w-2xl w-full mx-auto">
+        <!-- Game Title -->
+        <div class="text-center mb-6">
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-primary font-montserrat mb-2">
+            Prisoner's Dilemma
+          </h1>
+          <p class="text-gray-600 text-lg">
+            Play through a variety of real-life inspired dilemmas against clever AI. Will you cooperate or betray?
+          </p>
+          <button id="openRules" class="mt-4 inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition text-base">
+            <i class="fas fa-info-circle mr-2"></i> Rules &amp; Instructions
+          </button>
+        </div>
+        <!-- Scenario Card -->
+        <div class="scenario-card rounded-xl shadow-lg p-6 mb-6 text-white flex flex-col sm:flex-row items-center" id="scenarioCard">
+          <img alt="Illustration of two prisoners in separate cells, each pondering their choices, with a payoff matrix in the background" class="w-24 h-24 rounded-lg object-cover mb-4 sm:mb-0 sm:mr-6 border-4 border-white" height="120" id="scenarioImg" src="https://replicate.delivery/xezq/6amhItLevKyJJia3qdX2ioEr0k6VUXyDtefcMsySRM9uVgppA/out-0.png" width="120"/>
+          <div>
+            <h2 class="text-xl font-bold mb-1" id="scenarioTitle">
+              Scenario Title
+            </h2>
+            <p class="text-base" id="scenarioDesc">
+              Scenario description goes here.
+            </p>
+          </div>
+        </div>
+        <!-- Game State -->
+        <div class="bg-white rounded-xl shadow p-6 mb-6">
+          <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
+            <div class="mb-2 sm:mb-0">
+              <span class="text-gray-500 font-semibold">
+                Round
+              </span>
+              <span class="text-primary font-bold text-lg ml-1" id="roundNum">
+                1
+              </span>
+              <span class="text-gray-400">
+                /
+              </span>
+              <span class="text-gray-500" id="totalRounds">
+                5
+              </span>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div>
+                <span class="text-gray-500 font-semibold">
+                  You
+                </span>
+                <span class="ml-1 text-primary font-bold text-lg" id="userScore">
+                  0
+                </span>
+              </div>
+              <div>
+                <span class="text-gray-500 font-semibold">
+                  AI
+                </span>
+                <span class="ml-1 text-secondary font-bold text-lg" id="aiScore">
+                  0
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Payoff Matrix -->
+          <div class="overflow-x-auto mb-4">
+            <table class="min-w-full text-center border border-gray-200 rounded-lg">
+              <thead>
+                <tr>
+                  <th class="px-2 py-1 bg-gray-100 text-gray-700 font-semibold border-b border-gray-200"></th>
+                  <th class="px-2 py-1 bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">
+                    AI: Cooperate
+                  </th>
+                  <th class="px-2 py-1 bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">
+                    AI: Betray
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="px-2 py-1 bg-gray-50 text-gray-700 font-semibold border-b border-gray-200">
+                    You: Cooperate
+                  </td>
+                  <td class="px-2 py-1 border-b border-gray-200" id="payoffCC">
+                    2, 2
+                  </td>
+                  <td class="px-2 py-1 border-b border-gray-200" id="payoffCB">
+                    0, 3
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-2 py-1 bg-gray-50 text-gray-700 font-semibold">
+                    You: Betray
+                  </td>
+                  <td class="px-2 py-1" id="payoffBC">
+                    3, 0
+                  </td>
+                  <td class="px-2 py-1" id="payoffBB">
+                    1, 1
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Decision Buttons -->
+          <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <button class="decision-btn w-full sm:w-48 px-6 py-3 bg-secondary text-white font-bold rounded-lg shadow hover:bg-secondary/90 transition text-lg flex items-center justify-center" id="btnCooperate">
+              <i class="fas fa-handshake mr-2"></i>
+              Cooperate
+            </button>
+            <button class="decision-btn w-full sm:w-48 px-6 py-3 bg-accent text-white font-bold rounded-lg shadow hover:bg-accent/90 transition text-lg flex items-center justify-center" id="btnBetray">
+              <i class="fas fa-user-secret mr-2"></i>
+              Betray
+            </button>
+          </div>
+        </div>
+        <!-- Game Log -->
+        <div class="bg-white rounded-xl shadow p-4 mb-6 h-40 overflow-y-auto text-sm text-gray-700 font-mono" id="gameLog">
+        </div>
+        <!-- Game Over Modal -->
+        <div class="fixed inset-0 modal-bg flex items-center justify-center z-50 hidden" id="gameOverModal">
+          <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
+            <h2 class="text-2xl font-bold text-primary mb-2">
+              Game Over
+            </h2>
+            <p class="text-lg mb-4" id="finalResult">
+              You scored X, AI scored Y.
+            </p>
+            <button class="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition mb-2 w-full" onclick="restartGame()">
+              Play Again
+            </button>
+            <a class="block px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition w-full" href="index.html">
+              Back to Game List
+            </a>
+          </div>
+        </div>
+        <!-- Rules Modal -->
+        <div class="fixed inset-0 modal-bg flex items-center justify-center z-50 hidden" id="rulesModal">
+          <div class="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-left relative">
+            <button id="closeRules" class="absolute top-3 right-3 text-gray-400 hover:text-primary text-2xl">
+              <i class="fas fa-times"></i>
+            </button>
+            <h2 class="text-2xl font-bold text-primary mb-2">
+              How to Play: Prisoner's Dilemma
+            </h2>
+            <ul class="list-disc pl-6 text-gray-700 mb-4 text-base">
+              <li>
+                Each round, you and the AI face a dilemma. You can choose to <span class="font-semibold text-secondary">Cooperate</span> or <span class="font-semibold text-accent">Betray</span>.
+              </li>
+              <li>
+                The AI will also choose to cooperate or betray, based on its unique personality and your past actions.
+              </li>
+              <li>
+                Your choices and the AI's choices determine your scores, according to the <span class="font-semibold">payoff matrix</span> shown.
+              </li>
+              <li>
+                Play through all rounds. Try to maximize your score!
+              </li>
+              <li>
+                Each scenario has a different story, AI behavior, and payoff matrix. Try them all!
+              </li>
+            </ul>
+            <div class="mb-2">
+              <span class="font-semibold text-primary">Tips:</span>
+              <ul class="list-disc pl-6 text-gray-600 text-sm">
+                <li>Observe the AI's behavior. Some AIs hold grudges, some forgive, some are unpredictable.</li>
+                <li>Sometimes, cooperation leads to better long-term results. Sometimes, betrayal pays off. Think ahead!</li>
+                <li>Each scenario is inspired by real-life situations: school, sports, business, and more.</li>
+              </ul>
+            </div>
+            <div class="mt-4 text-center">
+              <button id="closeRulesBtn" class="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition">
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-gray-800">
+      <div class="max-w-7xl mx-auto py-6 px-4 flex flex-col md:flex-row items-center justify-between">
+        <div class="flex items-center mb-4 md:mb-0">
+          <img alt="Game Theory Playground logo, small" class="h-8 w-8 rounded-full" src="https://replicate.delivery/xezq/vNQ7rYVyOlZtCZvJTOCDiLNNeRnEeJMiv3hvTGX7LHQYjv0UA/out-0.png"/>
+          <span class="ml-2 text-lg text-white font-bold font-montserrat">
+            GameTheory Playground
+          </span>
+        </div>
+        <p class="mt-2 md:mt-0 text-gray-400 text-sm">
+          © 2024 GameTheory Playground. All rights reserved.
+        </p>
+      </div>
+    </footer>
+    <script>
+      // --- Game Data ---
+      const scenarios = [
+        {
+          title: "Classic Prisoner's Dilemma",
+          desc: "You and an AI are caught for a minor crime. If both cooperate (stay silent), you both get a light sentence. If one betrays, the betrayer goes free and the other gets a heavy sentence. If both betray, you both get moderate sentences.",
+          img: "https://replicate.delivery/xezq/V5RDrBoDfkwmRSHW2Ubon89vYgel10qHZsSevB6Df12cNelmC/out-0.png",
+          payoff: { CC: [2,2], CB: [0,3], BC: [3,0], BB: [1,1] },
+          aiBehaviors: [
+            { name: "Tit-for-Tat", desc: "AI starts by cooperating, then mimics your last move.", type: "titfortat" },
+            { name: "Always Betray", desc: "AI always betrays.", type: "alwaysbetray" },
+            { name: "Always Cooperate", desc: "AI always cooperates.", type: "alwayscooperate" },
+            { name: "Random", desc: "AI randomly chooses to cooperate or betray.", type: "random" }
+          ]
+        },
+        {
+          title: "School Cheating Scandal",
+          desc: "You and a classmate (AI) are suspected of cheating. If both stay silent, you get a warning. If one confesses, the other is suspended. If both confess, both get detention.",
+          img: "https://replicate.delivery/xezq/agmO1OyEshawJ5PA6etftbxdqFgF708P33ilJkN4NqVabv0UA/out-0.png",
+          payoff: { CC: [2,2], CB: [0,3], BC: [3,0], BB: [1,1] },
+          aiBehaviors: [
+            { name: "Grudger", desc: "AI cooperates until you betray, then always betrays.", type: "grudger" },
+            { name: "Forgiving", desc: "AI forgives your betrayals after a round.", type: "forgiving" },
+            { name: "Random", desc: "AI randomly chooses to cooperate or betray.", type: "random" }
+          ]
+        },
+        {
+          title: "Treasure Hunters",
+          desc: "You and an AI are caught by pirates. If both cooperate, you share the loot. If one betrays, the betrayer gets all the treasure. If both betray, pirates take everything.",
+          img: "https://replicate.delivery/xezq/ErhpL06Kp2ZGMNOvq4mO5dYyUrxCHSzggyfySbTfx0iZbv0UA/out-0.png",
+          payoff: { CC: [4,4], CB: [0,6], BC: [6,0], BB: [1,1] },
+          aiBehaviors: [
+            { name: "Suspicious", desc: "AI starts by betraying, then mimics your last move.", type: "suspicious" },
+            { name: "Random", desc: "AI randomly chooses to cooperate or betray.", type: "random" }
+          ]
+        },
+        {
+          title: "Science Fair Partners",
+          desc: "You and an AI are partners. If both work hard (cooperate), you both get a good grade. If one slacks off (betrays), the other does all the work. If both slack off, you both fail.",
+          img: "https://replicate.delivery/xezq/4nUf1HpliW29XinbgE6CzWFau3XtmJF4MyOh10VQyTvrxXaKA/out-0.png",
+          payoff: { CC: [3,3], CB: [0,4], BC: [4,0], BB: [1,1] },
+          aiBehaviors: [
+            { name: "Forgiving", desc: "AI forgives your betrayals after a round.", type: "forgiving" },
+            { name: "Always Cooperate", desc: "AI always cooperates.", type: "alwayscooperate" }
+          ]
+        },
+        {
+          title: "Sports Team Play",
+          desc: "You and an AI are teammates. If both play for the team (cooperate), you win together. If one plays selfishly (betrays), they get the glory. If both play selfishly, the team loses.",
+          img: "https://placehold.co/120x120/png?text=Sports+Team+Play",
+          payoff: { CC: [3,3], CB: [1,4], BC: [4,1], BB: [0,0] },
+          aiBehaviors: [
+            { name: "Copycat", desc: "AI copies your last move.", type: "titfortat" },
+            { name: "Random", desc: "AI randomly chooses to cooperate or betray.", type: "random" }
+          ]
+        },
+        {
+          title: "Business Partners",
+          desc: "You and an AI run a business. If both are honest (cooperate), you both profit. If one cheats (betrays), they get a big bonus. If both cheat, the business suffers.",
+          img: "https://placehold.co/120x120/png?text=Business+Partners",
+          payoff: { CC: [5,5], CB: [1,7], BC: [7,1], BB: [2,2] },
+          aiBehaviors: [
+            { name: "Greedy", desc: "AI betrays if you ever cooperate twice in a row.", type: "greedy" },
+            { name: "Random", desc: "AI randomly chooses to cooperate or betray.", type: "random" }
+          ]
+        },
+        {
+          title: "Environmental Pact",
+          desc: "You and an AI are countries deciding to reduce pollution. If both cooperate, the world benefits. If one betrays, they profit while the other pays the cost. If both betray, the environment suffers.",
+          img: "https://placehold.co/120x120/png?text=Environmental+Pact",
+          payoff: { CC: [4,4], CB: [1,6], BC: [6,1], BB: [0,0] },
+          aiBehaviors: [
+            { name: "Forgiving", desc: "AI forgives your betrayals after a round.", type: "forgiving" },
+            { name: "Random", desc: "AI randomly chooses to cooperate or betray.", type: "random" }
+          ]
+        },
+        {
+          title: "Online Game Alliance",
+          desc: "You and an AI are in an online game alliance. If both help each other, you both level up. If one betrays, they get all the loot. If both betray, you both lose resources.",
+          img: "https://placehold.co/120x120/png?text=Online+Game+Alliance",
+          payoff: { CC: [3,3], CB: [0,5], BC: [5,0], BB: [1,1] },
+          aiBehaviors: [
+            { name: "Revengeful", desc: "AI betrays if you betray, otherwise cooperates.", type: "grudger" },
+            { name: "Random", desc: "AI randomly chooses to cooperate or betray.", type: "random" }
+          ]
+        },
+        {
+          title: "Group Project",
+          desc: "You and an AI are assigned a group project. If both work, you both get an A. If one slacks, the other does all the work. If both slack, you both fail.",
+          img: "https://placehold.co/120x120/png?text=Group+Project",
+          payoff: { CC: [4,4], CB: [1,6], BC: [6,1], BB: [0,0] },
+          aiBehaviors: [
+            { name: "Forgiving", desc: "AI forgives your betrayals after a round.", type: "forgiving" },
+            { name: "Always Cooperate", desc: "AI always cooperates.", type: "alwayscooperate" }
+          ]
+        },
+        {
+          title: "Neighborhood Watch",
+          desc: "You and an AI are neighbors. If both keep watch (cooperate), your homes are safe. If one slacks off, the other does all the work. If both slack, crime increases.",
+          img: "https://placehold.co/120x120/png?text=Neighborhood+Watch",
+          payoff: { CC: [3,3], CB: [0,5], BC: [5,0], BB: [1,1] },
+          aiBehaviors: [
+            { name: "Grudger", desc: "AI cooperates until you betray, then always betrays.", type: "grudger" },
+            { name: "Random", desc: "AI randomly chooses to cooperate or betray.", type: "random" }
+          ]
+        }
+      ];
+
+      // --- Game State ---
+      let currentScenario, aiBehavior, round, totalRounds, userScore, aiScore, lastUserMove, lastAiMove, aiGrudge, aiGreedyCount, gameLog, userCoopStreak;
+      const minRounds = 5, maxRounds = 8;
+
+      // --- DOM Elements ---
+      const scenarioCard = document.getElementById('scenarioCard');
+      const scenarioImg = document.getElementById('scenarioImg');
+      const scenarioTitle = document.getElementById('scenarioTitle');
+      const scenarioDesc = document.getElementById('scenarioDesc');
+      const roundNum = document.getElementById('roundNum');
+      const totalRoundsEl = document.getElementById('totalRounds');
+      const userScoreEl = document.getElementById('userScore');
+      const aiScoreEl = document.getElementById('aiScore');
+      const btnCooperate = document.getElementById('btnCooperate');
+      const btnBetray = document.getElementById('btnBetray');
+      const gameLogEl = document.getElementById('gameLog');
+      const gameOverModal = document.getElementById('gameOverModal');
+      const finalResult = document.getElementById('finalResult');
+      const payoffCC = document.getElementById('payoffCC');
+      const payoffCB = document.getElementById('payoffCB');
+      const payoffBC = document.getElementById('payoffBC');
+      const payoffBB = document.getElementById('payoffBB');
+      const openRules = document.getElementById('openRules');
+      const rulesModal = document.getElementById('rulesModal');
+      const closeRules = document.getElementById('closeRules');
+      const closeRulesBtn = document.getElementById('closeRulesBtn');
+
+      // --- Utility Functions ---
+      function randomInt(a, b) {
+        return Math.floor(Math.random() * (b - a + 1)) + a;
+      }
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      // --- AI Logic ---
+      function getAiMove(userMove) {
+        switch (aiBehavior.type) {
+          case "titfortat":
+            if (round === 1) return "C";
+            return lastUserMove || "C";
+          case "alwaysbetray":
+            return "B";
+          case "alwayscooperate":
+            return "C";
+          case "random":
+            return Math.random() < 0.5 ? "C" : "B";
+          case "grudger":
+            if (aiGrudge) return "B";
+            if (userMove === "B") { aiGrudge = true; return "B"; }
+            return "C";
+          case "forgiving":
+            if (lastUserMove === "B" && lastAiMove === "B") return "C";
+            if (userMove === "B") return "B";
+            return "C";
+          case "suspicious":
+            if (round === 1) return "B";
+            return lastUserMove || "C";
+          case "greedy":
+            if (userCoopStreak >= 2) return "B";
+            return "C";
+          default:
+            return Math.random() < 0.5 ? "C" : "B";
+        }
+      }
+
+      // --- Game Logic ---
+      function startGame() {
+        // Pick a random scenario and AI behavior
+        currentScenario = scenarios[randomInt(0, scenarios.length - 1)];
+        aiBehavior = shuffle(currentScenario.aiBehaviors)[0];
+        round = 1;
+        totalRounds = randomInt(minRounds, maxRounds);
+        userScore = 0;
+        aiScore = 0;
+        lastUserMove = null;
+        lastAiMove = null;
+        aiGrudge = false;
+        aiGreedyCount = 0;
+        userCoopStreak = 0;
+        gameLog = [];
+        // Update UI
+        scenarioImg.src = currentScenario.img;
+        scenarioImg.alt = "Scenario: " + currentScenario.title;
+        scenarioTitle.textContent = currentScenario.title + " (" + aiBehavior.name + ")";
+        scenarioDesc.textContent = currentScenario.desc + " (AI: " + aiBehavior.desc + ")";
+        roundNum.textContent = round;
+        totalRoundsEl.textContent = totalRounds;
+        userScoreEl.textContent = userScore;
+        aiScoreEl.textContent = aiScore;
+        // Payoff matrix
+        payoffCC.textContent = currentScenario.payoff.CC.join(", ");
+        payoffCB.textContent = currentScenario.payoff.CB.join(", ");
+        payoffBC.textContent = currentScenario.payoff.BC.join(", ");
+        payoffBB.textContent = currentScenario.payoff.BB.join(", ");
+        // Log
+        gameLogEl.innerHTML = "";
+        logMsg("Scenario: " + currentScenario.title + " | AI: " + aiBehavior.name);
+        logMsg("Game start! Make your move.");
+        // Enable buttons
+        btnCooperate.disabled = false;
+        btnBetray.disabled = false;
+        btnCooperate.classList.remove("opacity-50", "cursor-not-allowed");
+        btnBetray.classList.remove("opacity-50", "cursor-not-allowed");
+        // Hide modal
+        gameOverModal.classList.add("hidden");
+      }
+
+      function playRound(userMove) {
+        // Disable buttons
+        btnCooperate.disabled = true;
+        btnBetray.disabled = true;
+        btnCooperate.classList.add("opacity-50", "cursor-not-allowed");
+        btnBetray.classList.add("opacity-50", "cursor-not-allowed");
+        // AI move
+        const aiMove = getAiMove(userMove);
+        // Payoff
+        let payoffKey = "";
+        if (userMove === "C" && aiMove === "C") payoffKey = "CC";
+        else if (userMove === "C" && aiMove === "B") payoffKey = "CB";
+        else if (userMove === "B" && aiMove === "C") payoffKey = "BC";
+        else payoffKey = "BB";
+        const [userPayoff, aiPayoff] = currentScenario.payoff[payoffKey];
+        userScore += userPayoff;
+        aiScore += aiPayoff;
+        // Log
+        logMsg(
+          `<span class="text-primary">Round ${round}:</span> You <b>${userMove === "C" ? "Cooperated" : "Betrayed"}</b>, AI <b>${aiMove === "C" ? "Cooperated" : "Betrayed"}</b> &rarr; <span class="text-green-600">You +${userPayoff}</span>, <span class="text-secondary">AI +${aiPayoff}</span>`
+        );
+        // Update UI
+        userScoreEl.textContent = userScore;
+        aiScoreEl.textContent = aiScore;
+        // Save last moves
+        lastUserMove = userMove;
+        lastAiMove = aiMove;
+        // For greedy AI
+        if (userMove === "C") userCoopStreak++; else userCoopStreak = 0;
+        // Next round or end
+        setTimeout(() => {
+          if (round < totalRounds) {
+            round++;
+            roundNum.textContent = round;
+            btnCooperate.disabled = false;
+            btnBetray.disabled = false;
+            btnCooperate.classList.remove("opacity-50", "cursor-not-allowed");
+            btnBetray.classList.remove("opacity-50", "cursor-not-allowed");
+            logMsg("Make your move.");
+          } else {
+            setTimeout(showGameOver, 700);
+          }
+        }, 900);
+      }
+
+      function logMsg(msg) {
+        gameLog.push(msg);
+        if (gameLog.length > 10) gameLog = gameLog.slice(gameLog.length - 10);
+        gameLogEl.innerHTML = gameLog.map(m => `<div>${m}</div>`).join("");
+        gameLogEl.scrollTop = gameLogEl.scrollHeight;
+      }
+
+      function showGameOver() {
+        let resultText = "";
+        if (userScore > aiScore) {
+          resultText = `<span class="text-primary font-bold">You win!</span> <br/>You scored <b>${userScore}</b>, AI scored <b>${aiScore}</b>.`;
+        } else if (userScore < aiScore) {
+          resultText = `<span class="text-secondary font-bold">AI wins!</span> <br/>You scored <b>${userScore}</b>, AI scored <b>${aiScore}</b>.`;
+        } else {
+          resultText = `<span class="text-accent font-bold">It's a tie!</span> <br/>You scored <b>${userScore}</b>, AI scored <b>${aiScore}</b>.`;
+        }
+        finalResult.innerHTML = resultText;
+        gameOverModal.classList.remove("hidden");
+      }
+
+      function restartGame() {
+        startGame();
+      }
+
+      // --- Rules Modal Logic ---
+      function openRulesModal() {
+        rulesModal.classList.remove("hidden");
+      }
+      function closeRulesModal() {
+        rulesModal.classList.add("hidden");
+      }
+
+      // --- Event Listeners ---
+      btnCooperate.addEventListener("click", () => playRound("C"));
+      btnBetray.addEventListener("click", () => playRound("B"));
+      openRules.addEventListener("click", openRulesModal);
+      closeRules.addEventListener("click", closeRulesModal);
+      closeRulesBtn.addEventListener("click", closeRulesModal);
+
+      // --- Start Game on Load ---
+      window.onload = startGame;
+    </script>
+  </body>
+</html>
