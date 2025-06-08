@@ -1,0 +1,446 @@
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Public Goods Game - GameTheory Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&amp;family=Montserrat:wght@500;700&amp;display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5',
+            secondary: '#10B981',
+            accent: '#F59E0B',
+            dark: '#1F2937',
+          },
+          fontFamily: {
+            poppins: ['Poppins', 'sans-serif'],
+            montserrat: ['Montserrat', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .modal-bg { background: rgba(30, 41, 59, 0.7); }
+    .contrib-bar { transition: width 0.4s; }
+    .ai-row { background: #f3f4f6; }
+    .user-row { background: #e0e7ff; }
+    .score-bar { background: linear-gradient(90deg, #4F46E5 0%, #10B981 100%); }
+    .score-bar-ai { background: linear-gradient(90deg, #f59e0b 0%, #818cf8 100%); }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <a class="flex items-center" href="index.html">
+            <img alt="Game Theory Playground logo, modern, with stylized game theory diagram" class="h-10 w-10 rounded-full" src="https://replicate.delivery/xezq/dyEdCw9SMj6NH1SKXGytY4Xk2H02qkdhhVkq9Ummyz514LNF/out-0.png"/>
+            <span class="ml-3 text-2xl font-bold text-primary font-montserrat tracking-tight">
+              GameTheory Playground
+            </span>
+          </a>
+        </div>
+        <div class="flex items-center">
+          <a class="text-primary font-semibold hover:underline px-4" href="index.html">
+            Home
+          </a>
+          <a class="text-gray-600 hover:text-primary px-4" href="#">
+            About
+          </a>
+          <a class="text-gray-600 hover:text-primary px-4" href="#">
+            Contact
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center justify-center px-2 py-8 sm:py-12">
+    <div class="max-w-2xl w-full mx-auto">
+      <!-- Title -->
+      <div class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary font-montserrat mb-2">
+          Public Goods Game
+        </h1>
+        <p class="text-gray-600 text-lg">
+          Decide how much to contribute to a shared pool. Will you cooperate or free-ride?
+        </p>
+        <button id="openRules" class="mt-4 inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition text-base">
+          <i class="fas fa-info-circle mr-2"></i> Rules &amp; Instructions
+        </button>
+      </div>
+      <!-- Scenario Card -->
+      <div class="rounded-xl shadow-lg p-6 mb-6 flex flex-col sm:flex-row items-center bg-gradient-to-r from-primary to-indigo-700 text-white">
+        <img alt="Cartoon group of students adding coins to a communal jar, with some holding back, representing cooperation and free-riding" class="w-24 h-24 rounded-lg object-cover mb-4 sm:mb-0 sm:mr-6 border-4 border-white" src="https://replicate.delivery/xezq/4nUf1HpliW29XinbgE6CzWFau3XtmJF4MyOh10VQyTvrxXaKA/out-0.png"/>
+        <div>
+          <h2 class="text-xl font-bold mb-1">
+            Contribute to the Common Good
+          </h2>
+          <p class="text-base">
+            Play with 3 AI players. Each round, decide how much of your coins to contribute to the public pool. The pool is multiplied and shared!
+          </p>
+        </div>
+      </div>
+      <!-- Game State -->
+      <div class="bg-white rounded-xl shadow p-6 mb-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
+          <div class="mb-2 sm:mb-0">
+            <span class="text-gray-500 font-semibold">
+              Round
+            </span>
+            <span class="text-primary font-bold text-lg ml-1" id="roundNum">
+              1
+            </span>
+            <span class="text-gray-400">
+              /
+            </span>
+            <span class="text-gray-500" id="totalRounds">
+              5
+            </span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div>
+              <span class="text-gray-500 font-semibold">
+                Your Score
+              </span>
+              <span class="ml-1 text-primary font-bold text-lg" id="userScore">
+                0
+              </span>
+            </div>
+            <div>
+              <span class="text-gray-500 font-semibold">
+                Highest AI
+              </span>
+              <span class="ml-1 text-secondary font-bold text-lg" id="aiScore">
+                0
+              </span>
+            </div>
+          </div>
+        </div>
+        <!-- Contribution Table -->
+        <div class="overflow-x-auto mb-4">
+          <table class="min-w-full text-center border border-gray-200 rounded-lg">
+            <thead>
+              <tr>
+                <th class="px-2 py-1 bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">Player</th>
+                <th class="px-2 py-1 bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">Contribution</th>
+                <th class="px-2 py-1 bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">Coins Left</th>
+                <th class="px-2 py-1 bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">Total Score</th>
+              </tr>
+            </thead>
+            <tbody id="contribTable">
+              <!-- Rows will be rendered here -->
+            </tbody>
+          </table>
+        </div>
+        <!-- Contribution Input -->
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-2">
+          <label class="font-semibold text-primary text-lg" for="userContrib">
+            Your Contribution:
+          </label>
+          <input type="range" min="0" max="10" value="5" id="userContrib" class="w-full sm:w-48 accent-primary" />
+          <span class="ml-2 text-lg font-bold text-primary" id="userContribVal">5</span>
+          <span class="ml-2 text-gray-500">/ 10 coins</span>
+        </div>
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+          <button id="submitContrib" class="w-full sm:w-48 px-6 py-3 bg-secondary text-white font-bold rounded-lg shadow hover:bg-secondary/90 transition text-lg flex items-center justify-center">
+            <i class="fas fa-donate mr-2"></i>
+            Submit Contribution
+          </button>
+        </div>
+      </div>
+      <!-- Game Log -->
+      <div class="bg-white rounded-xl shadow p-4 mb-6 h-40 overflow-y-auto text-sm text-gray-700 font-mono" id="gameLog">
+      </div>
+      <!-- Game Over Modal -->
+      <div class="fixed inset-0 modal-bg flex items-center justify-center z-50 hidden" id="gameOverModal">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
+          <h2 class="text-2xl font-bold text-primary mb-2">
+            Game Over
+          </h2>
+          <p class="text-lg mb-4" id="finalResult">
+            You scored X. Highest AI scored Y.
+          </p>
+          <button class="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition mb-2 w-full" onclick="restartGame()">
+            Play Again
+          </button>
+          <a class="block px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition w-full" href="index.html">
+            Back to Game List
+          </a>
+        </div>
+      </div>
+      <!-- Rules Modal -->
+      <div class="fixed inset-0 modal-bg flex items-center justify-center z-50 hidden" id="rulesModal">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full text-left relative">
+          <button id="closeRules" class="absolute top-3 right-3 text-gray-400 hover:text-primary text-2xl">
+            <i class="fas fa-times"></i>
+          </button>
+          <h2 class="text-2xl font-bold text-primary mb-2">
+            How to Play: Public Goods Game
+          </h2>
+          <ul class="list-disc pl-6 text-gray-700 mb-4 text-base">
+            <li>
+              You and 3 AI players each start with <b>10 coins</b> per round.
+            </li>
+            <li>
+              Decide how many coins to contribute to the <span class="font-semibold text-secondary">public pool</span>. The rest you keep.
+            </li>
+            <li>
+              The total pool is <span class="font-semibold text-accent">multiplied by 1.6</span> and split equally among all players.
+            </li>
+            <li>
+              Your score for the round = coins you kept + your share from the pool.
+            </li>
+            <li>
+              Try to maximize your total score over all rounds!
+            </li>
+            <li>
+              Will you cooperate for the group, or free-ride and keep more for yourself?
+            </li>
+          </ul>
+          <div class="mb-2">
+            <span class="font-semibold text-primary">Tips:</span>
+            <ul class="list-disc pl-6 text-gray-600 text-sm">
+              <li>AI players have different personalities: some cooperate, some free-ride, some copy your behavior.</li>
+              <li>Notice how the group's total score changes with more or less cooperation.</li>
+              <li>Try different strategies each round!</li>
+            </ul>
+          </div>
+          <div class="mt-4 text-center">
+            <button id="closeRulesBtn" class="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition">
+              Got it!
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <!-- Footer -->
+  <footer class="bg-gray-800">
+    <div class="max-w-7xl mx-auto py-6 px-4 flex flex-col md:flex-row items-center justify-between">
+      <div class="flex items-center mb-4 md:mb-0">
+        <img alt="Game Theory Playground logo, small" class="h-8 w-8 rounded-full" src="https://replicate.delivery/xezq/vNQ7rYVyOlZtCZvJTOCDiLNNeRnEeJMiv3hvTGX7LHQYjv0UA/out-0.png"/>
+        <span class="ml-2 text-lg text-white font-bold font-montserrat">
+          GameTheory Playground
+        </span>
+      </div>
+      <p class="mt-2 md:mt-0 text-gray-400 text-sm">
+        © 2024 GameTheory Playground. All rights reserved.
+      </p>
+    </div>
+  </footer>
+  <script>
+    // --- Game State ---
+    const NUM_PLAYERS = 4; // 1 user + 3 AI
+    const COINS_PER_ROUND = 10;
+    const MULTIPLIER = 1.6;
+    const MIN_ROUNDS = 5, MAX_ROUNDS = 8;
+
+    let round, totalRounds, userScore, aiScores, coinsLeft, contribs, gameLog, aiPersonalities, aiHistories;
+
+    // --- DOM Elements ---
+    const roundNum = document.getElementById('roundNum');
+    const totalRoundsEl = document.getElementById('totalRounds');
+    const userScoreEl = document.getElementById('userScore');
+    const aiScoreEl = document.getElementById('aiScore');
+    const contribTable = document.getElementById('contribTable');
+    const userContrib = document.getElementById('userContrib');
+    const userContribVal = document.getElementById('userContribVal');
+    const submitContrib = document.getElementById('submitContrib');
+    const gameLogEl = document.getElementById('gameLog');
+    const gameOverModal = document.getElementById('gameOverModal');
+    const finalResult = document.getElementById('finalResult');
+    const openRules = document.getElementById('openRules');
+    const rulesModal = document.getElementById('rulesModal');
+    const closeRules = document.getElementById('closeRules');
+    const closeRulesBtn = document.getElementById('closeRulesBtn');
+
+    // --- AI Personalities ---
+    const AI_PERSONALITIES = [
+      { name: "Cooperator", desc: "Always contributes 7-10 coins.", type: "cooperator" },
+      { name: "Free-Rider", desc: "Contributes 0-2 coins.", type: "freerider" },
+      { name: "Conditional", desc: "Matches your last contribution.", type: "conditional" },
+      { name: "Random", desc: "Randomly chooses any amount.", type: "random" }
+    ];
+
+    function randomInt(a, b) {
+      return Math.floor(Math.random() * (b - a + 1)) + a;
+    }
+
+    // --- Game Logic ---
+    function startGame() {
+      round = 1;
+      totalRounds = randomInt(MIN_ROUNDS, MAX_ROUNDS);
+      userScore = 0;
+      aiScores = [0, 0, 0];
+      coinsLeft = [COINS_PER_ROUND, COINS_PER_ROUND, COINS_PER_ROUND, COINS_PER_ROUND];
+      contribs = [0, 0, 0, 0];
+      gameLog = [];
+      aiHistories = [[], [], [], []];
+      // Assign random personalities to AIs
+      aiPersonalities = [];
+      let aiTypes = AI_PERSONALITIES.slice();
+      for (let i = 0; i < 3; i++) {
+        let idx = randomInt(0, aiTypes.length - 1);
+        aiPersonalities.push(aiTypes[idx]);
+        aiTypes.splice(idx, 1);
+      }
+      // UI
+      roundNum.textContent = round;
+      totalRoundsEl.textContent = totalRounds;
+      userScoreEl.textContent = userScore;
+      aiScoreEl.textContent = Math.max(...aiScores);
+      userContrib.value = 5;
+      userContribVal.textContent = 5;
+      renderTable();
+      gameLogEl.innerHTML = "";
+      logMsg("Game start! Decide your contribution.");
+      submitContrib.disabled = false;
+      submitContrib.classList.remove("opacity-50", "cursor-not-allowed");
+      gameOverModal.classList.add("hidden");
+    }
+
+    function renderTable() {
+      let html = '';
+      // User row
+      html += `<tr class="user-row font-bold">
+        <td class="px-2 py-1 border-b border-gray-200">You</td>
+        <td class="px-2 py-1 border-b border-gray-200">${contribs[0]}</td>
+        <td class="px-2 py-1 border-b border-gray-200">${COINS_PER_ROUND - contribs[0]}</td>
+        <td class="px-2 py-1 border-b border-gray-200">${userScore}</td>
+      </tr>`;
+      // AI rows
+      for (let i = 1; i < NUM_PLAYERS; i++) {
+        html += `<tr class="ai-row">
+          <td class="px-2 py-1 border-b border-gray-200">AI ${i} <span class="text-xs text-gray-400">(${aiPersonalities[i-1].name})</span></td>
+          <td class="px-2 py-1 border-b border-gray-200">${contribs[i]}</td>
+          <td class="px-2 py-1 border-b border-gray-200">${COINS_PER_ROUND - contribs[i]}</td>
+          <td class="px-2 py-1 border-b border-gray-200">${aiScores[i-1]}</td>
+        </tr>`;
+      }
+      contribTable.innerHTML = html;
+    }
+
+    function logMsg(msg) {
+      gameLog.push(msg);
+      if (gameLog.length > 10) gameLog = gameLog.slice(gameLog.length - 10);
+      gameLogEl.innerHTML = gameLog.map(m => `<div>${m}</div>`).join("");
+      gameLogEl.scrollTop = gameLogEl.scrollHeight;
+    }
+
+    function aiContribute(aiIdx) {
+      const aiType = aiPersonalities[aiIdx-1].type;
+      if (aiType === "cooperator") {
+        return randomInt(7, 10);
+      } else if (aiType === "freerider") {
+        return randomInt(0, 2);
+      } else if (aiType === "conditional") {
+        if (round === 1) return 5;
+        return clamp(contribs[0], 0, 10);
+      } else if (aiType === "random") {
+        return randomInt(0, 10);
+      }
+      return 5;
+    }
+
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
+
+    function playRound(userContribVal) {
+      // User
+      contribs[0] = clamp(parseInt(userContribVal), 0, 10);
+      // AIs
+      for (let i = 1; i < NUM_PLAYERS; i++) {
+        contribs[i] = aiContribute(i);
+      }
+      // Pool
+      const totalPool = contribs.reduce((a, b) => a + b, 0);
+      const multiplied = totalPool * MULTIPLIER;
+      const share = multiplied / NUM_PLAYERS;
+      // Update scores
+      userScore += (COINS_PER_ROUND - contribs[0]) + share;
+      for (let i = 1; i < NUM_PLAYERS; i++) {
+        aiScores[i-1] += (COINS_PER_ROUND - contribs[i]) + share;
+      }
+      // Log
+      logMsg(`<span class="text-primary">Round ${round}:</span> You contributed <b>${contribs[0]}</b>. Pool: <b>${totalPool}</b> &rarr; Multiplied: <b>${multiplied.toFixed(1)}</b>, Each gets: <b>${share.toFixed(1)}</b>`);
+      for (let i = 1; i < NUM_PLAYERS; i++) {
+        logMsg(`AI ${i} (${aiPersonalities[i-1].name}) contributed <b>${contribs[i]}</b>.`);
+      }
+      // Save history
+      for (let i = 0; i < NUM_PLAYERS; i++) {
+        aiHistories[i].push(contribs[i]);
+      }
+      // UI
+      userScoreEl.textContent = Math.round(userScore);
+      aiScoreEl.textContent = Math.round(Math.max(...aiScores));
+      renderTable();
+      // Next round or end
+      setTimeout(() => {
+        if (round < totalRounds) {
+          round++;
+          roundNum.textContent = round;
+          submitContrib.disabled = false;
+          submitContrib.classList.remove("opacity-50", "cursor-not-allowed");
+          logMsg("Decide your contribution for the next round.");
+        } else {
+          setTimeout(showGameOver, 700);
+        }
+      }, 900);
+    }
+
+    function showGameOver() {
+      let aiMax = Math.round(Math.max(...aiScores));
+      let userFinal = Math.round(userScore);
+      let resultText = "";
+      if (userFinal > aiMax) {
+        resultText = `<span class="text-primary font-bold">You win!</span> <br/>You scored <b>${userFinal}</b>. Highest AI scored <b>${aiMax}</b>.`;
+      } else if (userFinal < aiMax) {
+        resultText = `<span class="text-secondary font-bold">AI wins!</span> <br/>You scored <b>${userFinal}</b>. Highest AI scored <b>${aiMax}</b>.`;
+      } else {
+        resultText = `<span class="text-accent font-bold">It's a tie!</span> <br/>You scored <b>${userFinal}</b>. Highest AI scored <b>${aiMax}</b>.`;
+      }
+      finalResult.innerHTML = resultText;
+      gameOverModal.classList.remove("hidden");
+    }
+
+    function restartGame() {
+      startGame();
+    }
+
+    // --- Modal Logic ---
+    function openRulesModal() {
+      rulesModal.classList.remove("hidden");
+    }
+    function closeRulesModal() {
+      rulesModal.classList.add("hidden");
+    }
+
+    // --- Event Listeners ---
+    userContrib.addEventListener('input', function() {
+      userContribVal.textContent = this.value;
+    });
+    submitContrib.addEventListener('click', function() {
+      submitContrib.disabled = true;
+      submitContrib.classList.add("opacity-50", "cursor-not-allowed");
+      playRound(userContrib.value);
+    });
+    openRules.addEventListener('click', openRulesModal);
+    closeRules.addEventListener('click', closeRulesModal);
+    closeRulesBtn.addEventListener('click', closeRulesModal);
+
+    // --- Start Game on Load ---
+    window.onload = startGame;
+  </script>
+</body>
+</html>
